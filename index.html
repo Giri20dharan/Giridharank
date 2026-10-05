@@ -2,130 +2,247 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>DHT11 IoT Monitoring</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <!-- Firebase Libraries -->
+    <title>ESP32 IoT Control</title>
+
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 
     <style>
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
+
 
         body {
+
+            margin: 0;
+
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #dff6ff, #ffffff);
+
+            background: linear-gradient(
+                135deg,
+                #dff6ff,
+                #ffffff
+            );
+
             min-height: 100vh;
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
         }
+
 
         .container {
+
             width: 90%;
+
             max-width: 900px;
+
             text-align: center;
+
         }
+
 
         h1 {
+
             color: #123c69;
-            margin-bottom: 10px;
+
             font-size: 36px;
+
+            margin-bottom: 10px;
+
         }
+
 
         .subtitle {
+
             color: #555;
-            margin-bottom: 30px;
-            font-size: 18px;
+
+            margin-bottom: 25px;
+
         }
+
 
         .status {
+
             display: inline-block;
+
             padding: 10px 20px;
+
             border-radius: 20px;
+
             background: #eeeeee;
-            color: #555;
+
             margin-bottom: 30px;
+
             font-weight: bold;
+
         }
+
 
         .cards {
+
             display: flex;
+
             justify-content: center;
-            gap: 25px;
+
+            gap: 20px;
+
             flex-wrap: wrap;
+
         }
+
 
         .card {
-            width: 300px;
-            padding: 30px;
-            border-radius: 20px;
+
             background: white;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+
+            width: 270px;
+
+            padding: 30px;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.12);
+
         }
+
 
         .icon {
-            font-size: 50px;
-            margin-bottom: 15px;
+
+            font-size: 45px;
+
         }
+
 
         .card h2 {
+
             color: #444;
-            margin-bottom: 15px;
+
         }
+
 
         .value {
-            font-size: 48px;
+
+            font-size: 42px;
+
             font-weight: bold;
+
             color: #1677c8;
+
         }
+
 
         .unit {
-            font-size: 22px;
+
+            font-size: 20px;
+
             color: #555;
+
         }
 
-        .temperature {
-            border-top: 6px solid #ff7043;
+
+        /* RELAY */
+
+        .relay-card {
+
+            margin: 25px auto;
+
+            max-width: 570px;
+
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.12);
+
         }
 
-        .humidity {
-            border-top: 6px solid #29a6a6;
+
+        .relay-status {
+
+            font-size: 28px;
+
+            font-weight: bold;
+
+            margin: 20px;
+
         }
+
+
+        .relay-button {
+
+            width: 220px;
+
+            padding: 15px;
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            border: none;
+
+            border-radius: 30px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+        }
+
+
+        .relay-on {
+
+            background: #28a745;
+
+            color: white;
+
+        }
+
+
+        .relay-off {
+
+            background: #dc3545;
+
+            color: white;
+
+        }
+
+
+        .relay-button:hover {
+
+            transform: scale(1.05);
+
+        }
+
 
         .last-update {
-            margin-top: 30px;
+
+            margin-top: 20px;
+
             color: #666;
-            font-size: 14px;
-        }
 
-        .footer {
-            margin-top: 25px;
-            color: #777;
-            font-size: 14px;
-        }
-
-        @media (max-width: 600px) {
-
-            h1 {
-                font-size: 28px;
-            }
-
-            .card {
-                width: 100%;
-            }
-
-            .value {
-                font-size: 40px;
-            }
         }
 
     </style>
@@ -135,303 +252,460 @@
 
 <body>
 
-    <div class="container">
 
-        <h1>🌡️ DHT11 IoT Monitoring</h1>
-
-        <p class="subtitle">
-            ESP32 + DHT11 + Firebase Realtime Database
-        </p>
-
-        <div class="status" id="status">
-            🔄 Connecting to Firebase...
-        </div>
+<div class="container">
 
 
-        <div class="cards">
+    <h1>🌡️ ESP32 IoT Monitoring</h1>
 
-            <!-- Temperature Card -->
-            <div class="card temperature">
 
-                <div class="icon">
-                    🌡️
-                </div>
+    <p class="subtitle">
 
-                <h2>Temperature</h2>
+        DHT11 + OLED + Firebase + Relay Control
 
-                <div>
-                    <span class="value" id="temperature">
-                        --.- 
-                    </span>
+    </p>
 
-                    <span class="unit">
-                        °C
-                    </span>
-                </div>
 
+    <div class="status"
+         id="connectionStatus">
+
+        🔄 Connecting...
+
+    </div>
+
+
+    <!-- SENSOR CARDS -->
+
+    <div class="cards">
+
+
+        <!-- TEMPERATURE -->
+
+        <div class="card">
+
+            <div class="icon">
+                🌡️
             </div>
 
+            <h2>
+                Temperature
+            </h2>
 
-            <!-- Humidity Card -->
-            <div class="card humidity">
+            <span class="value"
+                  id="temperature">
 
-                <div class="icon">
-                    💧
-                </div>
+                --.-
 
-                <h2>Humidity</h2>
+            </span>
 
-                <div>
-                    <span class="value" id="humidity">
-                        --.-
-                    </span>
-
-                    <span class="unit">
-                        %
-                    </span>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="last-update">
-
-            Last Update:
-            <span id="lastUpdate">
-                Waiting for data...
+            <span class="unit">
+                °C
             </span>
 
         </div>
 
 
-        <div class="footer">
+        <!-- HUMIDITY -->
 
-            ESP32 DHT11 Firebase Monitoring System
+        <div class="card">
+
+            <div class="icon">
+                💧
+            </div>
+
+            <h2>
+                Humidity
+            </h2>
+
+            <span class="value"
+                  id="humidity">
+
+                --.-
+
+            </span>
+
+            <span class="unit">
+                %
+
+            </span>
 
         </div>
+
 
     </div>
 
 
-    <script>
+    <!-- RELAY CONTROL -->
 
-        // =====================================================
-        // FIREBASE CONFIGURATION
-        // =====================================================
+    <div class="relay-card">
 
-        const firebaseConfig = {
-
-            apiKey: "AIzaSyDvyGhJND3Ep9919srDH0TCkyf1Mdn9kUA",
-
-            authDomain: "dht-sensor--rit.firebaseapp.com",
-
-            databaseURL:
-                "https://dht-sensor--rit-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-            projectId: "dht-sensor--rit",
-
-            storageBucket:
-                "dht-sensor--rit.firebasestorage.app",
-
-            messagingSenderId: "948304978396",
-
-            appId:
-                "1:948304978396:web:87c7229b3382d1e995ef19",
-
-            measurementId: "G-XZHYWHF28K"
-        };
+        <div class="icon">
+            ⚡
+        </div>
 
 
-        // =====================================================
-        // INITIALIZE FIREBASE
-        // =====================================================
-
-        firebase.initializeApp(firebaseConfig);
+        <h2>
+            Relay Control
+        </h2>
 
 
-        // Firebase Authentication
-        const auth = firebase.auth();
+        <div class="relay-status"
+             id="relayStatus">
+
+            Relay OFF
+
+        </div>
 
 
-        // Firebase Realtime Database
-        const database = firebase.database();
+        <button
+            class="relay-button relay-off"
+            id="relayButton"
+            onclick="toggleRelay()">
+
+            TURN ON
+
+        </button>
+
+    </div>
 
 
-        // =====================================================
-        // HTML ELEMENTS
-        // =====================================================
+    <div class="last-update">
 
-        const temperatureElement =
-            document.getElementById("temperature");
+        Last Sensor Update:
 
-        const humidityElement =
-            document.getElementById("humidity");
+        <span id="lastUpdate">
+            Waiting...
+        </span>
 
-        const statusElement =
-            document.getElementById("status");
-
-        const lastUpdateElement =
-            document.getElementById("lastUpdate");
+    </div>
 
 
-        // =====================================================
-        // ANONYMOUS LOGIN
-        // =====================================================
-
-        auth.signInAnonymously()
-
-            .then(() => {
-
-                console.log("Firebase Anonymous Login Successful");
-
-                statusElement.innerHTML =
-                    "🟢 Firebase Connected";
-
-                statusElement.style.background =
-                    "#d4edda";
-
-                statusElement.style.color =
-                    "#155724";
+</div>
 
 
-                startReadingData();
-
-            })
-
-            .catch((error) => {
-
-                console.error(
-                    "Firebase Login Error:",
-                    error
-                );
-
-                statusElement.innerHTML =
-                    "🔴 Firebase Login Failed";
-
-                statusElement.style.background =
-                    "#f8d7da";
-
-                statusElement.style.color =
-                    "#721c24";
-
-            });
+<script>
 
 
-        // =====================================================
-        // READ DATA FROM FIREBASE
-        // =====================================================
+// =====================================================
+// FIREBASE CONFIGURATION
+// =====================================================
 
-        function startReadingData() {
+const firebaseConfig = {
 
-            const temperatureRef =
-                database.ref("/DHT11/temperature");
+    apiKey:
+        "AIzaSyDvyGhJND3Ep9919srDH0TCkyf1Mdn9kUA",
 
-            const humidityRef =
-                database.ref("/DHT11/humidity");
+    authDomain:
+        "dht-sensor--rit.firebaseapp.com",
+
+    databaseURL:
+        "https://dht-sensor--rit-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+    projectId:
+        "dht-sensor--rit",
+
+    storageBucket:
+        "dht-sensor--rit.firebasestorage.app",
+
+    messagingSenderId:
+        "948304978396",
+
+    appId:
+        "1:948304978396:web:87c7229b3382d1e995ef19",
+
+    measurementId:
+        "G-XZHYWHF28K"
+};
 
 
-            // -----------------------------------------------
-            // TEMPERATURE
-            // -----------------------------------------------
+// =====================================================
+// INITIALIZE FIREBASE
+// =====================================================
 
-            temperatureRef.on(
-
-                "value",
-
-                (snapshot) => {
-
-                    const temperature =
-                        snapshot.val();
+firebase.initializeApp(firebaseConfig);
 
 
-                    if (temperature !== null) {
+const auth =
+    firebase.auth();
 
-                        temperatureElement.innerText =
-                            Number(temperature).toFixed(1);
 
-                        updateTime();
+const database =
+    firebase.database();
 
-                        console.log(
-                            "Temperature:",
-                            temperature
-                        );
-                    }
 
-                },
+// =====================================================
+// HTML ELEMENTS
+// =====================================================
 
-                (error) => {
+const temperatureElement =
+    document.getElementById("temperature");
 
-                    console.error(
-                        "Temperature Error:",
-                        error
-                    );
 
-                }
+const humidityElement =
+    document.getElementById("humidity");
 
+
+const connectionStatus =
+    document.getElementById("connectionStatus");
+
+
+const relayStatus =
+    document.getElementById("relayStatus");
+
+
+const relayButton =
+    document.getElementById("relayButton");
+
+
+const lastUpdate =
+    document.getElementById("lastUpdate");
+
+
+// =====================================================
+// ANONYMOUS LOGIN
+// =====================================================
+
+auth.signInAnonymously()
+
+.then(() => {
+
+    console.log(
+        "Anonymous login successful"
+    );
+
+
+    connectionStatus.innerHTML =
+        "🟢 Firebase Connected";
+
+
+    connectionStatus.style.background =
+        "#d4edda";
+
+
+    connectionStatus.style.color =
+        "#155724";
+
+
+    startFirebase();
+
+})
+
+
+.catch((error) => {
+
+    console.error(error);
+
+
+    connectionStatus.innerHTML =
+        "🔴 Firebase Connection Failed";
+
+
+    connectionStatus.style.background =
+        "#f8d7da";
+
+
+    connectionStatus.style.color =
+        "#721c24";
+
+});
+
+
+// =====================================================
+// FIREBASE DATA
+// =====================================================
+
+function startFirebase()
+{
+
+    // -----------------------------------------------
+    // TEMPERATURE
+    // -----------------------------------------------
+
+    database
+        .ref("/DHT11/temperature")
+        .on("value", function(snapshot)
+        {
+
+            const value =
+                snapshot.val();
+
+
+            if (value !== null)
+            {
+
+                temperatureElement.innerText =
+                    Number(value).toFixed(1);
+
+                updateTime();
+
+            }
+
+        });
+
+
+    // -----------------------------------------------
+    // HUMIDITY
+    // -----------------------------------------------
+
+    database
+        .ref("/DHT11/humidity")
+        .on("value", function(snapshot)
+        {
+
+            const value =
+                snapshot.val();
+
+
+            if (value !== null)
+            {
+
+                humidityElement.innerText =
+                    Number(value).toFixed(1);
+
+                updateTime();
+
+            }
+
+        });
+
+
+    // -----------------------------------------------
+    // RELAY STATUS
+    // -----------------------------------------------
+
+    database
+        .ref("/Relay/state")
+        .on("value", function(snapshot)
+        {
+
+            const state =
+                snapshot.val();
+
+
+            updateRelayButton(
+                state === true
             );
 
+        });
 
-            // -----------------------------------------------
-            // HUMIDITY
-            // -----------------------------------------------
-
-            humidityRef.on(
-
-                "value",
-
-                (snapshot) => {
-
-                    const humidity =
-                        snapshot.val();
+}
 
 
-                    if (humidity !== null) {
+// =====================================================
+// RELAY BUTTON
+// =====================================================
 
-                        humidityElement.innerText =
-                            Number(humidity).toFixed(1);
+function toggleRelay()
+{
 
-                        updateTime();
+    database
+        .ref("/Relay/state")
+        .once("value")
+        .then(function(snapshot)
+        {
 
-                        console.log(
-                            "Humidity:",
-                            humidity
-                        );
-                    }
+            const currentState =
+                snapshot.val() === true;
 
-                },
 
-                (error) => {
+            const newState =
+                !currentState;
 
-                    console.error(
-                        "Humidity Error:",
-                        error
-                    );
 
-                }
+            return database
+                .ref("/Relay/state")
+                .set(newState);
 
+        })
+
+        .then(function()
+        {
+
+            console.log(
+                "Relay command sent"
             );
 
-        }
+        })
+
+        .catch(function(error)
+        {
+
+            console.error(
+                "Relay error:",
+                error
+            );
+
+        });
+
+}
 
 
-        // =====================================================
-        // UPDATE TIME
-        // =====================================================
+// =====================================================
+// UPDATE BUTTON
+// =====================================================
 
-        function updateTime() {
+function updateRelayButton(isON)
+{
 
-            const now =
-                new Date();
+    if (isON)
+    {
+
+        relayStatus.innerText =
+            "Relay ON";
+
+        relayStatus.style.color =
+            "#28a745";
 
 
-            lastUpdateElement.innerText =
-                now.toLocaleTimeString();
+        relayButton.innerText =
+            "TURN OFF";
 
-        }
 
-    </script>
+        relayButton.className =
+            "relay-button relay-on";
+
+    }
+
+    else
+    {
+
+        relayStatus.innerText =
+            "Relay OFF";
+
+        relayStatus.style.color =
+            "#dc3545";
+
+
+        relayButton.innerText =
+            "TURN ON";
+
+
+        relayButton.className =
+            "relay-button relay-off";
+
+    }
+
+}
+
+
+// =====================================================
+// UPDATE TIME
+// =====================================================
+
+function updateTime()
+{
+
+    const now =
+        new Date();
+
+
+    lastUpdate.innerText =
+        now.toLocaleTimeString();
+
+}
+
+</script>
+
 
 </body>
 
