@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DHT11 IoT Monitoring</title>
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #dff6ff, #ffffff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #123c69;
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+
+        .subtitle {
+            color: #555;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: #eeeeee;
+            color: #555;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .cards {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            width: 300px;
+            padding: 30px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1677c8;
+        }
+
+        .unit {
+            font-size: 22px;
+            color: #555;
+        }
+
+        .temperature {
+            border-top: 6px solid #ff7043;
+        }
+
+        .humidity {
+            border-top: 6px solid #29a6a6;
+        }
+
+        .last-update {
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 25px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .card {
+                width: 100%;
+            }
+
+            .value {
+                font-size: 40px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <h1>🌡️ DHT11 IoT Monitoring</h1>
+
+        <p class="subtitle">
+            ESP32 + DHT11 + Firebase Realtime Database
+        </p>
+
+        <div class="status" id="status">
+            🔄 Connecting to Firebase...
+        </div>
+
+
+        <div class="cards">
+
+            <!-- Temperature Card -->
+            <div class="card temperature">
+
+                <div class="icon">
+                    🌡️
+                </div>
+
+                <h2>Temperature</h2>
+
+                <div>
+                    <span class="value" id="temperature">
+                        --.- 
+                    </span>
+
+                    <span class="unit">
+                        °C
+                    </span>
+                </div>
+
+            </div>
+
+
+            <!-- Humidity Card -->
+            <div class="card humidity">
+
+                <div class="icon">
+                    💧
+                </div>
+
+                <h2>Humidity</h2>
+
+                <div>
+                    <span class="value" id="humidity">
+                        --.-
+                    </span>
+
+                    <span class="unit">
+                        %
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="last-update">
+
+            Last Update:
+            <span id="lastUpdate">
+                Waiting for data...
+            </span>
+
+        </div>
+
+
+        <div class="footer">
+
+            ESP32 DHT11 Firebase Monitoring System
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // =====================================================
+        // FIREBASE CONFIGURATION
+        // =====================================================
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyDvyGhJND3Ep9919srDH0TCkyf1Mdn9kUA",
+
+            authDomain: "dht-sensor--rit.firebaseapp.com",
+
+            databaseURL:
+                "https://dht-sensor--rit-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+            projectId: "dht-sensor--rit",
+
+            storageBucket:
+                "dht-sensor--rit.firebasestorage.app",
+
+            messagingSenderId: "948304978396",
+
+            appId:
+                "1:948304978396:web:87c7229b3382d1e995ef19",
+
+            measurementId: "G-XZHYWHF28K"
+        };
+
+
+        // =====================================================
+        // INITIALIZE FIREBASE
+        // =====================================================
+
+        firebase.initializeApp(firebaseConfig);
+
+
+        // Firebase Authentication
+        const auth = firebase.auth();
+
+
+        // Firebase Realtime Database
+        const database = firebase.database();
+
+
+        // =====================================================
+        // HTML ELEMENTS
+        // =====================================================
+
+        const temperatureElement =
+            document.getElementById("temperature");
+
+        const humidityElement =
+            document.getElementById("humidity");
+
+        const statusElement =
+            document.getElementById("status");
+
+        const lastUpdateElement =
+            document.getElementById("lastUpdate");
+
+
+        // =====================================================
+        // ANONYMOUS LOGIN
+        // =====================================================
+
+        auth.signInAnonymously()
+
+            .then(() => {
+
+                console.log("Firebase Anonymous Login Successful");
+
+                statusElement.innerHTML =
+                    "🟢 Firebase Connected";
+
+                statusElement.style.background =
+                    "#d4edda";
+
+                statusElement.style.color =
+                    "#155724";
+
+
+                startReadingData();
+
+            })
+
+            .catch((error) => {
+
+                console.error(
+                    "Firebase Login Error:",
+                    error
+                );
+
+                statusElement.innerHTML =
+                    "🔴 Firebase Login Failed";
+
+                statusElement.style.background =
+                    "#f8d7da";
+
+                statusElement.style.color =
+                    "#721c24";
+
+            });
+
+
+        // =====================================================
+        // READ DATA FROM FIREBASE
+        // =====================================================
+
+        function startReadingData() {
+
+            const temperatureRef =
+                database.ref("/DHT11/temperature");
+
+            const humidityRef =
+                database.ref("/DHT11/humidity");
+
+
+            // -----------------------------------------------
+            // TEMPERATURE
+            // -----------------------------------------------
+
+            temperatureRef.on(
+
+                "value",
+
+                (snapshot) => {
+
+                    const temperature =
+                        snapshot.val();
+
+
+                    if (temperature !== null) {
+
+                        temperatureElement.innerText =
+                            Number(temperature).toFixed(1);
+
+                        updateTime();
+
+                        console.log(
+                            "Temperature:",
+                            temperature
+                        );
+                    }
+
+                },
+
+                (error) => {
+
+                    console.error(
+                        "Temperature Error:",
+                        error
+                    );
+
+                }
+
+            );
+
+
+            // -----------------------------------------------
+            // HUMIDITY
+            // -----------------------------------------------
+
+            humidityRef.on(
+
+                "value",
+
+                (snapshot) => {
+
+                    const humidity =
+                        snapshot.val();
+
+
+                    if (humidity !== null) {
+
+                        humidityElement.innerText =
+                            Number(humidity).toFixed(1);
+
+                        updateTime();
+
+                        console.log(
+                            "Humidity:",
+                            humidity
+                        );
+                    }
+
+                },
+
+                (error) => {
+
+                    console.error(
+                        "Humidity Error:",
+                        error
+                    );
+
+                }
+
+            );
+
+        }
+
+
+        // =====================================================
+        // UPDATE TIME
+        // =====================================================
+
+        function updateTime() {
+
+            const now =
+                new Date();
+
+
+            lastUpdateElement.innerText =
+                now.toLocaleTimeString();
+
+        }
+
+    </script>
+
+</body>
+
+</html>
